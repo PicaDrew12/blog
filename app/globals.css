@@ -1,26 +1,158 @@
+
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #F7F0E6;
+  --surface: #FFF9F2;
+  --surface-2: #FFFDF9;
+
+  --text: #2A211B;
+  --text-muted: #6A5D53;
+  --text-faint: #8B7D72;
+
+  --border: #E7D9CA;
+  --border-strong: #D5C2AF;
+
+  --accent: #7A4E2D;
+  --accent-hover: #5F3D23;
+  --accent-soft: #EFE1D3;
+
+  --link: #6E4325;
+  --link-hover: #4F2F1B;
+
+  --selection-bg: #DCC5AF;
+  --selection-text: #241912;
+
+  --code-bg: #F2E8DE;
+  --code-text: #2F2823;
+  --code-border: #E0CDBB;
+
+  --quote-bg: #F4EBE2;
+  --quote-border: #CFAE90;
+
+  --success: #5E7357;
+  --warning: #9A6A3A;
+  --error: #8A4F45;
+}
+
+.dark {
+  --bg: #17110D;
+  --surface: #201813;
+  --surface-2: #281F18;
+
+  --text: #F4EBDD;
+  --text-muted: #C9B8A6;
+  --text-faint: #9C8B7A;
+
+  --border: #3A2D24;
+  --border-strong: #4A3A2F;
+
+  --accent: #C08A5A;
+  --accent-hover: #D19A66;
+  --accent-soft: #33261C;
+
+  --link: #D29A6A;
+  --link-hover: #E0B07E;
+
+  --selection-bg: #6D4A33;
+  --selection-text: #FFF7EE;
+
+  --code-bg: #241B16;
+  --code-text: #F0E5D8;
+  --code-border: #3B2D24;
+
+  --quote-bg: #221A15;
+  --quote-border: #8E6342;
+
+  --success: #8FA37E;
+  --warning: #D0A06A;
+  --error: #C27A6E;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-code);
+  --font-serif: var(--font-body);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--text);
+}
+
+button, a, nav, .caption, small {
+  font-family: var(--font-ui);
+}
+
+code, pre {
+  font-family: var(--font-mono);
+}
+
+a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--link-hover);
+  text-decoration: underline;
+}
+
+button {
+  border-color: var(--border);
+  color: var(--text);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+button:hover {
+  background: var(--accent-soft);
+  border-color: var(--border-strong);
+}
+
+code {
+  background: var(--code-bg);
+  color: var(--code-text);
+  border-color: var(--code-border);
+}
+
+::selection {
+  background: var(--selection-bg);
+  color: var(--selection-text);
+}
+
+.prose {
+  font-family: var(--font-body);
+  color: var(--text);
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+  font-family: var(--font-heading);
+  color: var(--text);
+}
+
+.prose code {
+  font-family: var(--font-mono);
+  color: var(--code-text);
+}
+
+strong, b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.prose strong, .prose b {
+  color: var(--text);
+  font-weight: 600;
 }
