@@ -38,11 +38,10 @@ export default async function PostPage({
 
   return (
     <article className="prose prose-neutral dark:prose-invert mx-auto max-w-2xl px-4 py-16">
-      <Link href="/blog" className="text-sm hover:underline mb-4 block" style={{ color: 'var(--text-muted)' }}>
+      <Link href="/blog" className="text-sm hover:underline mb-8 block" style={{ color: 'var(--text-muted)' }}>
         ← Back to blog
       </Link>
-      <h1>{metadata.title}</h1>
-      <div className="flex items-center gap-2">
+      <div className="mb-6 flex items-center gap-2">
         <p className="text-sm text-neutral-500">
           {new Date(metadata.date).toLocaleDateString('en-US', {
             year: 'numeric', month: 'long', day: 'numeric',

@@ -1,8 +1,14 @@
 import Link from 'next/link'
-import { getAllCreativeWorks, getCreativeWorkTypes } from '@/lib/posts'
+import { getCreativeWorkTypes } from '@/lib/posts'
+
+const typeInfo = {
+  poem: { singular: 'Poem', plural: 'Poems', description: 'Poetry collections' },
+  prose: { singular: 'Prose', plural: 'Prose', description: 'Short stories and prose pieces' },
+  worldbuilding: { singular: 'Worldbuilding', plural: 'Worldbuilding', description: 'Worlds and lore' },
+  language: { singular: 'Language', plural: 'Languages', description: 'Linguistic works' },
+}
 
 export default async function CreativeWorksPage() {
-  const works = await getAllCreativeWorks()
   const types = await getCreativeWorkTypes()
 
   return (
@@ -11,49 +17,24 @@ export default async function CreativeWorksPage() {
         ← Back to home
       </Link>
       <h1 className="text-3xl font-bold tracking-tight">Creative Works</h1>
+      <p className="mt-4 text-lg text-neutral-600">Explore my creative collections</p>
 
-      {types.map((type) => {
-        const typeWorks = works.filter((w) => w.type === type)
-        // Group by collection
-        const collections = new Map<string, typeof typeWorks>()
-        typeWorks.forEach((work) => {
-          const collectionName = work.collection || 'Uncategorized'
-          if (!collections.has(collectionName)) {
-            collections.set(collectionName, [])
-          }
-          collections.get(collectionName)!.push(work)
-        })
-
-        return (
-          <section key={type} className="mt-14">
-            <h2 className="text-2xl font-bold tracking-tight capitalize mb-6">{type}s</h2>
-            {Array.from(collections.entries()).map(([collectionName, collectionWorks]) => (
-              <div key={collectionName} className="mb-10">
-                <h3 className="text-lg font-semibold text-neutral-700 dark:text-neutral-300 mb-4">
-                  {collectionName}
-                </h3>
-                <div className="space-y-6 pl-4">
-                  {collectionWorks.map((work) => (
-                    <Link key={work.slug} href={`/creative/${work.slug}`} className="block group">
-                      <p className="text-sm text-neutral-500">
-                        {new Date(work.date).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
-                      </p>
-                      <h4 className="mt-1 text-lg font-semibold group-hover:underline">
-                        {work.title}
-                      </h4>
-                      <p className="mt-1 text-neutral-600">{work.description}</p>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </section>
-        )
-      })}
+      <div className="mt-12 grid gap-6">
+        {types.map((type) => {
+          const info = typeInfo[type as keyof typeof typeInfo]
+          return (
+            <Link
+              key={type}
+              href={`/creative/${type}`}
+              className="block group border-t border-b py-6 hover:bg-opacity-50"
+              style={{ borderColor: 'var(--border)' }}
+            >
+              <h2 className="text-2xl font-bold group-hover:underline">{info.plural}</h2>
+              <p className="mt-2 text-neutral-600">{info.description}</p>
+            </Link>
+          )
+        })}
+      </div>
     </main>
   )
 }

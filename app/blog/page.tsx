@@ -13,7 +13,7 @@ export default async function BlogPage() {
       <h1 className="text-3xl font-bold tracking-tight">Blog</h1>
       <div className="mt-10 space-y-10">
         {posts.map((post) => (
-          <Link key={post.slug} href={`/blog/${post.slug}`} className="block group">
+          <Link key={post.slug} href={`/blog/${post.slug}`} className="block group border-t border-b py-6" style={{ borderColor: 'var(--border)' }}>
             <div className="flex items-center gap-2">
               <p className="text-sm text-neutral-500">
                 {new Date(post.date).toLocaleDateString('en-US', {

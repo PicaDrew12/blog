@@ -22,7 +22,7 @@ export default async function Home() {
         <h2 className="text-2xl font-bold tracking-tight mb-10">Recent blog posts</h2>
         <div className="space-y-10">
           {recentBlog.map((post) => (
-            <Link key={post.slug} href={`/blog/${post.slug}`} className="block group">
+            <Link key={post.slug} href={`/blog/${post.slug}`} className="block group border-t border-b py-6" style={{ borderColor: 'var(--border)' }}>
               <div className="flex items-center gap-2">
                 <p className="text-sm text-neutral-500">
                   {new Date(post.date).toLocaleDateString('en-US', {
@@ -53,7 +53,7 @@ export default async function Home() {
         <h2 className="text-2xl font-bold tracking-tight mb-10">Recent creative works</h2>
         <div className="space-y-10">
           {recentCreative.map((work) => (
-            <Link key={work.slug} href={`/creative/${work.slug}`} className="block group">
+            <Link key={work.slug} href={`/creative/${work.type}/${work.slug}`} className="block group border-t border-b py-6" style={{ borderColor: 'var(--border)' }}>
               <div className="flex items-center gap-2">
                 <p className="text-sm text-neutral-500">
                   {new Date(work.date).toLocaleDateString('en-US', {
