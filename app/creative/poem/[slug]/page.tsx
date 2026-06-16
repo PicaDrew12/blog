@@ -49,7 +49,7 @@ export default async function PoemPage({
       >
         ← Back to poems
       </Link>
-
+    
       <div className="mb-6 flex flex-col gap-0.5 [&_p]:my-0">
         <p className="text-sm text-neutral-500">
           {new Date(metadata.date).toLocaleDateString('en-US', {

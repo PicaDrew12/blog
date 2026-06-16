@@ -16,6 +16,7 @@ export type PostMetadata = {
   description: string
   type: 'blog' | CreativeType
   collection?: string
+  coverImage?: string
 }
 
 // Blog posts
