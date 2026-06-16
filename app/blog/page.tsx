@@ -1,8 +1,9 @@
 import Link from 'next/link'
-import { getAllPosts } from '@/lib/posts'
+import { getAllBlogPosts } from '@/lib/posts'
+import Tag from '@/app/components/Tag'
 
 export default async function BlogPage() {
-  const posts = await getAllPosts()
+  const posts = await getAllBlogPosts()
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-16">
@@ -13,11 +14,14 @@ export default async function BlogPage() {
       <div className="mt-10 space-y-10">
         {posts.map((post) => (
           <Link key={post.slug} href={`/blog/${post.slug}`} className="block group">
-            <p className="text-sm text-neutral-500">
-              {new Date(post.date).toLocaleDateString('en-US', {
-                year: 'numeric', month: 'long', day: 'numeric',
-              })}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-neutral-500">
+                {new Date(post.date).toLocaleDateString('en-US', {
+                  year: 'numeric', month: 'long', day: 'numeric',
+                })}
+              </p>
+              <Tag type={post.type} />
+            </div>
             <h2 className="mt-1 text-xl font-semibold group-hover:underline">
               {post.title}
             </h2>
