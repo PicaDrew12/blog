@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPostSlugs } from '@/lib/posts'
 
@@ -36,6 +37,9 @@ export default async function PostPage({
 
   return (
     <article className="prose prose-neutral dark:prose-invert mx-auto max-w-2xl px-4 py-16">
+      <Link href="/blog" className="text-sm hover:underline mb-4 block" style={{ color: 'var(--text-muted)' }}>
+        ← Back to blog
+      </Link>
       <h1>{metadata.title}</h1>
       <p className="text-sm text-neutral-500">
         {new Date(metadata.date).toLocaleDateString('en-US', {
