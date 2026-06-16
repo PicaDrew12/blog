@@ -38,36 +38,49 @@ export default async function PostPage({
   const { default: Post, metadata } = post
 
   return (
-    <article className="prose prose-neutral dark:prose-invert mx-auto max-w-2xl px-4 py-16">
-      <Link href="/blog" className="text-sm hover:underline mb-8 block" style={{ color: 'var(--text-muted)' }}>
+    <article className="mx-auto max-w-2xl px-4 py-16">
+      <Link
+        href="/blog"
+        className="mb-8 block text-sm hover:underline"
+        style={{ color: 'var(--text-muted)' }}
+      >
         ← Back to blog
       </Link>
-      <h1 className="text-5xl font-bold tracking-tight">
-  {metadata.title}
-</h1>
-      <div className="mb-6 flex items-center gap-2">
-        <p className="text-sm text-neutral-500">
-          {new Date(metadata.date).toLocaleDateString('en-US', {
-            year: 'numeric', month: 'long', day: 'numeric',
-          })}
-        </p>
-        <Tag type={metadata.type} />
-      </div>
 
-      {metadata.coverImage && (
-        <div className="not-prose mb-8 w-full" style={{ aspectRatio: '3/2' }}>
-          <Image
-            src={metadata.coverImage}
-            alt="Cover image"
-            width={1200}
-            height={675}
-            className="h-full w-full object-cover"
-            priority
-          />
+      <header className="mb-10">
+        <div className="mb-4 flex items-center gap-2">
+          <p className="text-sm text-neutral-500">
+            {new Date(metadata.date).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })}
+          </p>
+          <Tag type={metadata.type} />
         </div>
-      )}
 
-      <Post />
+        <h1 className="mb-8 text-4xl font-bold tracking-tight sm:text-5xl">
+          {metadata.title}
+        </h1>
+
+        {metadata.coverImage && (
+  <div className="my-8">
+    <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-900">
+      <Image
+        src={metadata.coverImage}
+        alt={metadata.title}
+        fill
+        className="object-cover"
+        sizes="(max-width: 768px) 100vw, 672px"
+      />
+    </div>
+  </div>
+)}
+      </header>
+
+      <div className="prose prose-neutral dark:prose-invert max-w-none">
+        <Post />
+      </div>
     </article>
   )
 }
