@@ -6,6 +6,9 @@ export default async function BlogPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-16">
+      <Link href="/" className="text-sm hover:underline mb-4 block" style={{ color: 'var(--text-muted)' }}>
+        ← Back to home
+      </Link>
       <h1 className="text-3xl font-bold tracking-tight">Blog</h1>
       <div className="mt-10 space-y-10">
         {posts.map((post) => (
