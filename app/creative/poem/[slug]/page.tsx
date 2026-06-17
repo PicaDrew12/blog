@@ -4,8 +4,7 @@ import { notFound } from 'next/navigation'
 import { getCreativeTypeSlug, getCreativeMetadata } from '@/lib/posts'
 
 export function generateStaticParams() {
-  const slugs = getCreativeTypeSlug('poem')
-  return slugs.map((slug) => ({ slug }))
+  return getCreativeTypeSlug('poem').map((slug) => ({ slug }))
 }
 
 export const dynamicParams = false
@@ -41,30 +40,52 @@ export default async function PoemPage({
   const { default: Content, metadata } = content
 
   return (
-    <article className="prose prose-neutral dark:prose-invert mx-auto max-w-2xl px-4 py-16">
-      <Link
-        href="/creative/poem"
-        className="text-sm hover:underline mb-1 block"
-        style={{ color: 'var(--text-muted)' }}
+    <article className="mx-auto max-w-2xl px-4 py-14">
+      {/* Breadcrumb */}
+      <nav
+        className="flex items-center gap-1.5 text-xs mb-10"
+        style={{ color: 'var(--text-faint)', fontFamily: 'var(--font-ui)' }}
       >
-        ← Back to poems
-      </Link>
-    
-      <div className="mb-6 flex flex-col gap-0.5 [&_p]:my-0">
-        <p className="text-sm text-neutral-500">
+        <Link
+          href="/creative"
+          className="transition-colors"
+          style={{ color: 'var(--text-muted)' }}
+        >
+          Creative
+        </Link>
+        <span>·</span>
+        <span>Poem</span>
+        {metadata.collection && (
+          <>
+            <span>·</span>
+            <span>{metadata.collection}</span>
+          </>
+        )}
+      </nav>
+
+      {/* Header — narrow, centered feel for poetry */}
+      <header className="mb-12 max-w-md">
+        <h1
+          className="text-3xl font-bold tracking-tight leading-snug"
+          style={{ fontFamily: 'var(--font-heading)' }}
+        >
+          {metadata.title}
+        </h1>
+        <p
+          className="mt-2 text-xs"
+          style={{ color: 'var(--text-faint)', fontFamily: 'var(--font-ui)' }}
+        >
           {new Date(metadata.date).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
-            day: 'numeric',
           })}
         </p>
-        {metadata.collection && (
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-            Collection: <span className="font-medium">{metadata.collection}</span>
-          </p>
-        )}
+      </header>
+
+      {/* Poem body — narrow column, preserves line breaks */}
+      <div className="content-poem max-w-md">
+        <Content />
       </div>
-      <Content />
     </article>
   )
 }

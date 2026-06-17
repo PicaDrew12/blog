@@ -1,6 +1,6 @@
-
 @import "tailwindcss";
-@plugin "@tailwindcss/typography";
+
+/* ─── Design tokens ─────────────────────────────────────────── */
 
 :root {
   --bg: #F7F0E6;
@@ -78,6 +78,8 @@
   --font-serif: var(--font-body);
 }
 
+/* ─── Base ──────────────────────────────────────────────────── */
+
 body {
   background: var(--bg);
   color: var(--text);
@@ -90,12 +92,12 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text);
 }
 
-button, a, nav, .caption, small {
+button, nav, .caption, small {
   font-family: var(--font-ui);
 }
 
 code, pre {
-  font-family: var(--font-mono);
+  font-family: var(--font-code);
 }
 
 a {
@@ -121,38 +123,232 @@ button:hover {
   border-color: var(--border-strong);
 }
 
-code {
-  background: var(--code-bg);
-  color: var(--code-text);
-  border-color: var(--code-border);
-}
-
 ::selection {
   background: var(--selection-bg);
   color: var(--selection-text);
 }
 
-.prose {
+/* ─── Article content ───────────────────────────────────────── */
+/*
+  .content      — blog posts, prose, worldbuilding, language
+  .content-poem — poetry: tighter, preserves line intent
+*/
+
+.content,
+.content-poem {
+  color: var(--text);
   font-family: var(--font-body);
-  color: var(--text);
 }
 
-.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+/* Headings */
+.content h1,
+.content h2,
+.content h3,
+.content h4,
+.content h5,
+.content h6,
+.content-poem h1,
+.content-poem h2,
+.content-poem h3 {
   font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--text);
+  line-height: 1.2;
 }
 
-.prose code {
-  font-family: var(--font-mono);
+.content h1       { font-size: 2rem;    margin: 2.25em 0 0.75em; }
+.content h2       { font-size: 1.625rem; margin: 2em 0 0.6em; padding-bottom: 0.4em; border-bottom: 1px solid var(--border); }
+.content h3       { font-size: 1.3rem;  margin: 1.75em 0 0.5em; }
+.content h4       { font-size: 1.1rem;  margin: 1.5em 0 0.4em; font-weight: 600; }
+.content h5,
+.content h6       { font-size: 1rem;    margin: 1.25em 0 0.35em; font-weight: 600; }
+
+/* Paragraphs */
+.content p {
+  font-size: 1.125rem;
+  line-height: 1.85;
+  margin: 1.5em 0;
+}
+
+.content > p:first-child,
+.content > *:first-child {
+  margin-top: 0;
+}
+
+/* Links */
+.content a,
+.content-poem a {
+  color: var(--link);
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+  transition: color 0.15s, text-decoration-color 0.15s;
+}
+
+.content a:hover,
+.content-poem a:hover {
+  color: var(--link-hover);
+  text-decoration-color: var(--link-hover);
+}
+
+/* Strong / Em */
+.content strong,
+.content b,
+.content-poem strong,
+.content-poem b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.content em,
+.content-poem em {
+  font-style: italic;
+}
+
+/* Lists */
+.content ul,
+.content ol {
+  padding-left: 1.6em;
+  margin: 1.25em 0;
+}
+
+.content li {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  margin: 0.4em 0;
+}
+
+.content ul { list-style-type: disc; }
+.content ol { list-style-type: decimal; }
+
+.content li::marker {
+  color: var(--text-faint);
+}
+
+/* Blockquote */
+.content blockquote,
+.content-poem blockquote {
+  margin: 2em 0;
+  padding: 1em 1.5em;
+  border-left: 2px solid var(--quote-border);
+  background: var(--quote-bg);
+  border-radius: 0 6px 6px 0;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.content blockquote p,
+.content-poem blockquote p {
+  margin: 0;
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+
+/* Horizontal rule */
+.content hr,
+.content-poem hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 3em 0;
+}
+
+/* Inline code */
+.content code,
+.content-poem code {
+  font-family: var(--font-code);
+  font-size: 0.875em;
+  color: var(--code-text);
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+}
+
+/* Code blocks */
+.content pre,
+.content-poem pre {
+  font-family: var(--font-code);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 8px;
+  padding: 1.25em 1.5em;
+  overflow-x: auto;
+  margin: 2em 0;
+}
+
+.content pre code,
+.content-poem pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
   color: var(--code-text);
 }
 
-strong, b {
-  color: var(--text);
-  font-weight: 600;
+/* Images */
+.content img,
+.content-poem img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 2em 0;
+  display: block;
 }
 
-.prose strong, .prose b {
-  color: var(--text);
+/* Tables */
+.content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2em 0;
+  font-size: 0.9375rem;
+}
+
+.content th {
+  text-align: left;
+  font-family: var(--font-ui);
   font-weight: 600;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  padding: 0.625em 1em;
+  border-bottom: 2px solid var(--border-strong);
+}
+
+.content td {
+  padding: 0.625em 1em;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  vertical-align: top;
+}
+
+.content tr:last-child td {
+  border-bottom: none;
+}
+
+/* ─── Poem-specific overrides ───────────────────────────────── */
+
+.content-poem {
+  font-size: 1.0625rem;
+}
+
+/* Each stanza is a <p> in MDX */
+.content-poem p {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  margin: 0 0 2em;       /* tight within stanza, gap between stanzas */
+  white-space: pre-line; /* preserves intentional line breaks in source */
+  letter-spacing: 0.01em;
+}
+
+.content-poem p:last-child {
+  margin-bottom: 0;
+}
+
+/* Poem section breaks */
+.content-poem hr {
+  margin: 2.5em 0;
 }
