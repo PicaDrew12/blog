@@ -6,7 +6,8 @@ import { getAllBlogPosts, getAllCreativeWorks } from '@/lib/posts'
 export default async function Home() {
   const blogPosts = await getAllBlogPosts()
   const creativeWorks = await getAllCreativeWorks()
-  const recentBlog = blogPosts.slice(0, 3)
+  const latestArticle = blogPosts[0]
+  const recentBlog = blogPosts.slice(1, 4)
   const recentCreative = creativeWorks.slice(0, 5)
 
   return (
@@ -24,7 +25,85 @@ export default async function Home() {
         </p>
       </div>
 
+      {/* Latest Article */}
+      {latestArticle && (
+        <section className="mb-16">
+          <p
+            className="text-xs font-semibold uppercase tracking-widest mb-6"
+            style={{ color: 'var(--text-faint)', fontFamily: 'var(--font-ui)' }}
+          >
+            Latest article
+          </p>
+
+          <Link
+            href={`/blog/${latestArticle.slug}`}
+            className="block group"
+          >
+            {latestArticle.coverImage ? (
+              <div
+                className="relative w-full rounded-lg overflow-hidden mb-5"
+                style={{
+                  aspectRatio: '16/9',
+                  backgroundColor: 'var(--surface)',
+                }}
+              >
+                <Image
+                  src={latestArticle.coverImage}
+                  alt={latestArticle.title}
+                  fill
+                  className="object-cover transition-opacity group-hover:opacity-90"
+                  sizes="(max-width: 768px) 100vw, 672px"
+                />
+              </div>
+            ) : (
+              <div
+                className="w-full rounded-lg mb-5"
+                style={{
+                  aspectRatio: '16/9',
+                  backgroundColor: 'var(--surface)',
+                }}
+              />
+            )}
+
+            <p
+              className="text-xs mb-2"
+              style={{
+                color: 'var(--text-faint)',
+                fontFamily: 'var(--font-ui)',
+              }}
+            >
+              {new Date(latestArticle.date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </p>
+
+            <h2
+              className="text-2xl font-bold leading-snug group-hover:underline mb-3"
+              style={{ fontFamily: 'var(--font-heading)' }}
+            >
+              {latestArticle.title}
+            </h2>
+
+            {latestArticle.tags && latestArticle.tags.length > 0 && (
+              <BlogTags tags={latestArticle.tags} className="mb-3" />
+            )}
+
+            {latestArticle.description && (
+              <p
+                className="text-base leading-relaxed"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                {latestArticle.description}
+              </p>
+            )}
+          </Link>
+        </section>
+      )}
+
       {/* Recent Writing */}
+      {recentBlog.length > 0 && (
       <section className="mb-16">
         <div className="flex items-baseline justify-between mb-6">
           <h2
@@ -99,6 +178,7 @@ export default async function Home() {
           ))}
         </div>
       </section>
+      )}
 
       {/* Recent Creative Works */}
       <section>
