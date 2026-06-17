@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Palette Processor</title>
+    <style>
+        :root { --primary: #6366f1; --primary-hover: #4f46e5; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; gap: 20px; padding: 20px; background: #f1f5f9; height: 100vh; margin: 0; box-sizing: border-box; color: #1e293b; }
+        
+        .sidebar { width: 360px; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 16px; flex-shrink: 0; }
+        .canvas-area { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; background: #e2e8f0; border-radius: 12px; padding: 20px; position: relative; }
+        
+        canvas { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); background: #fff; display: none; }
+        .placeholder-text { color: #64748b; font-size: 1.1rem; font-weight: 500; }
+        
+        h2 { margin: 0 0 8px 0; font-size: 1.5rem; color: #0f172a; }
+        .section-title { font-weight: 600; font-size: 0.9rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+        
+        input[type="file"] { width: 100%; padding: 8px; border: 2px dashed #cbd5e1; border-radius: 6px; cursor: pointer; box-sizing: border-box; }
+        
+        #pipeline { display: flex; flex-direction: column; gap: 12px; }
+        .step { border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; cursor: grab; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; position: relative; }
+        .step:active { cursor: grabbing; transform: scale(1.02); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .step-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: 600; }
+        .drag-handle { color: #94a3b8; font-size: 1.2rem; }
+        
+        .slider-container { display: flex; align-items: center; gap: 12px; }
+        input[type="range"] { flex-grow: 1; accent-color: var(--primary); }
+        .val-display { font-variant-numeric: tabular-nums; width: 32px; text-align: right; font-size: 0.9rem; color: #475569; }
+        
+        #progress-container { width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; display: none; }
+        #progress-bar { width: 0%; height: 100%; background: var(--primary); transition: width 0.1s linear; }
+        
+        button { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 1rem; width: 100%; transition: background 0.2s; margin-top: auto; }
+        button:hover { background: var(--primary-hover); }
+        button:disabled { background: #cbd5e1; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div>
+        <h2>Palette Processor</h2>
+        <input type="file" id="upload" accept="image/*">
+    </div>
+    
+    <div>
+        <div class="section-title">Execution Order (Drag to sort)</div>
+        <div id="pipeline">
+            <div class="step" draggable="true" data-type="kawahara">
+                <div class="step-header">
+                    <span>Kawahara Filter</span>
+                    <span class="drag-handle">☰</span>
+                </div>
+                <div class="slider-container">
+                    <input type="range" id="kawahara-intensity" min="0" max="8" step="1" value="0">
+                    <span class="val-display" id="kawahara-val">0</span>
+                </div>
+            </div>
+            <div class="step" draggable="true" data-type="dither">
+                <div class="step-header">
+                    <span>Bayer Dithering</span>
+                    <span class="drag-handle">☰</span>
+                </div>
+                <div class="slider-container">
+                    <input type="range" id="dither-intensity" min="0" max="100" step="5" value="0">
+                    <span class="val-display" id="dither-val">0%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="progress-container"><div id="progress-bar"></div></div>
+    <button id="process-btn" onclick="runPipeline()" disabled>Run Pipeline</button>
+</div>
+
+<div class="canvas-area">
+    <div class="placeholder-text" id="placeholder">Upload an image to begin</div>
+    <canvas id="canvas"></canvas>
+</div>
+
+<script>
+    // Configuration & 23-Color Palette Definition
+    const paletteHex = ["#17110D","#201813","#281F18","#F4EBDD","#C9B8A6","#9C8B7A","#3A2D24","#4A3A2F","#C08A5A","#D19A66","#33261C","#D29A6A","#E0B07E","#6D4A33","#FFF7EE","#241B16","#F0E5D8","#3B2D24","#221A15","#8E6342","#8FA37E","#D0A06A","#C27A6E"];
+    const palette = paletteHex.map(hex => [
+        parseInt(hex.slice(1,3), 16),
+        parseInt(hex.slice(3,5), 16),
+        parseInt(hex.slice(5,7), 16)
+    ]);
+
+    // Bayer 4x4 Dithering Matrix
+    const bayerMatrix4x4 = [
+        [ 0,  8,  2, 10],
+        [12,  4, 14,  6],
+        [ 3, 11,  1,  9],
+        [15,  7, 13,  5]
+    ].map(row => row.map(v => (v / 16) - 0.5)); // Normalized around 0
+
+    let originalImgData = null;
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const placeholder = document.getElementById('placeholder');
+    const processBtn = document.getElementById('process-btn');
+    const progressBar = document.getElementById('progress-bar');
+    const progressContainer = document.getElementById('progress-container');
+
+    // UI Sliders Output updates
+    document.getElementById('kawahara-intensity').oninput = (e) => document.getElementById('kawahara-val').innerText = e.target.value;
+    document.getElementById('dither-intensity').oninput = (e) => document.getElementById('dither-val').innerText = e.target.value + '%';
+
+    // File Upload handling
+    document.getElementById('upload').onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                placeholder.style.display = 'none';
+                canvas.style.display = 'block';
+                
+                // Keep performance balanced for ultra-large files
+                let w = img.width, h = img.height;
+                const maxDim = 1200;
+                if (w > maxDim || h > maxDim) {
+                    if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                    else { w = Math.round((w * maxDim) / h); h = maxDim; }
+                }
+                
+                canvas.width = w;
+                canvas.height = h;
+                ctx.drawImage(img, 0, 0, w, h);
+                originalImgData = ctx.getImageData(0, 0, w, h);
+                processBtn.disabled = false;
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+
+    // Drag and Drop Pipeline Sorting
+    const pipeline = document.getElementById('pipeline');
+    let draggedItem = null;
+    pipeline.addEventListener('dragstart', (e) => { draggedItem = e.target.closest('.step'); });
+    pipeline.addEventListener('dragover', (e) => e.preventDefault());
+    pipeline.addEventListener('drop', (e) => {
+        const target = e.target.closest('.step');
+        if (target && target !== draggedItem) {
+            const all = [...pipeline.querySelectorAll('.step')];
+            if (all.indexOf(draggedItem) < all.indexOf(target)) target.after(draggedItem);
+            else target.before(draggedItem);
+        }
+    });
+
+    // Helper functions for image processing
+    function getClosestColor(r, g, b) {
+        let minDistance = Infinity;
+        let closest = palette[0];
+        for (let i = 0; i < palette.length; i++) {
+            const color = palette[i];
+            const dist = (r - color[0])**2 + (g - color[1])**2 + (b - color[2])**2;
+            if (dist < minDistance) { minDistance = dist; closest = color; }
+        }
+        return closest;
+    }
+
+    // Processing Filters
+    function applyKawahara(src, width, height, radius) {
+        if (radius === 0) return src;
+        const dest = new Uint8ClampedArray(src.length);
+        
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const idx = (y * width + x) * 4;
+                dest[idx+3] = src[idx+3]; // Alpha copy
+                
+                // Subwindow boundaries definitions
+                const subwindows = [
+                    { r1: y - radius, r2: y,          c1: x - radius, c2: x },       // Top-Left
+                    { r1: y - radius, r2: y,          c1: x,          c2: x + radius }, // Top-Right
+                    { r1: y,          r2: y + radius, c1: x - radius, c2: x },       // Bottom-Left
+                    { r1: y,          r2: y + radius, c1: x,          c2: x + radius }  // Bottom-Right
+                ];
+
+                let minVariance = Infinity;
+                let bestR = 0, bestG = 0, bestB = 0;
+
+                for (let s = 0; s < 4; s++) {
+                    const win = subwindows[s];
+                    let sumR = 0, sumG = 0, sumB = 0, sumSqR = 0, sumSqG = 0, sumSqB = 0, count = 0;
+
+                    for (let r = win.r1; r <= win.r2; r++) {
+                        if (r < 0 || r >= height) continue;
+                        for (let c = win.c1; c <= win.c2; c++) {
+                            if (c < 0 || c >= width) continue;
+                            
+                            const pIdx = (r * width + c) * 4;
+                            const vr = src[pIdx], vg = src[pIdx+1], vb = src[pIdx+2];
+                            
+                            sumR += vr; sumG += vg; sumB += vb;
+                            sumSqR += vr * vr; sumSqG += vg * vg; sumSqB += vb * vb;
+                            count++;
+                        }
+                    }
+
+                    if (count === 0) continue;
+                    
+                    // Math variance calculation
+                    const meanR = sumR / count, meanG = sumG / count, meanB = sumB / count;
+                    const varR = (sumSqR / count) - (meanR * meanR);
+                    const varG = (sumSqG / count) - (meanG * meanG);
+                    const varB = (sumSqB / count) - (meanB * meanB);
+                    const totalVariance = varR + varG + varB;
+
+                    if (totalVariance < minVariance) {
+                        minVariance = totalVariance;
+                        bestR = meanR; bestG = meanG; bestB = meanB;
+                    }
+                }
+
+                dest[idx] = bestR; dest[idx+1] = bestG; dest[idx+2] = bestB;
+            }
+        }
+        return dest;
+    }
+
+    function applyDitheringAndPalette(src, width, height, ditherIntensity) {
+        const dest = new Uint8ClampedArray(src.length);
+        const spread = ditherIntensity * 2.55; // Spread conversion out to an 8-bit dynamic width scale factor
+
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const idx = (y * width + x) * 4;
+                
+                // Get pattern offset bias
+                const bias = bayerMatrix4x4[y % 4][x % 4] * spread;
+                
+                const r = Math.min(255, Math.max(0, src[idx] + bias));
+                const g = Math.min(255, Math.max(0, src[idx+1] + bias));
+                const b = Math.min(255, Math.max(0, src[idx+2] + bias));
+                
+                const closest = getClosestColor(r, g, b);
+                
+                dest[idx] = closest[0];
+                dest[idx+1] = closest[1];
+                dest[idx+2] = closest[2];
+                dest[idx+3] = src[idx+3];
+            }
+        }
+        return dest;
+    }
+
+    // Pipeline Engine runner
+    function runPipeline() {
+        if (!originalImgData) return;
+        
+        processBtn.disabled = true;
+        progressContainer.style.display = 'block';
+        progressBar.style.width = '10%';
+
+        // Defer UI thread block execution using a brief setTimeout window
+        setTimeout(() => {
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Allocate a back-buffer copy array
+            let buffer = new Uint8ClampedArray(originalImgData.data);
+            
+            const steps = [...pipeline.querySelectorAll('.step')];
+            
+            progressBar.style.width = '30%';
+            
+            steps.forEach((stepElement, stepIndex) => {
+                const type = stepElement.getAttribute('data-type');
+                
+                if (type === 'kawahara') {
+                    const radius = parseInt(document.getElementById('kawahara-intensity').value);
+                    buffer = applyKawahara(buffer, width, height, radius);
+                } 
+                else if (type === 'dither') {
+                    const intensity = parseInt(document.getElementById('dither-intensity').value);
+                    buffer = applyDitheringAndPalette(buffer, width, height, intensity);
+                }
+                
+                progressBar.style.width = (30 + ((stepIndex + 1) / steps.length) * 60) + '%';
+            });
+
+            // Flush out the finished frame back buffer to the active visible DOM viewport canvas 
+            const finalImageData = ctx.createImageData(width, height);
+            finalImageData.data.set(buffer);
+            ctx.putImageData(finalImageData, 0, 0);
+
+            progressBar.style.width = '100%';
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+                processBtn.disabled = false;
+            }, 400);
+
+        }, 50);
+    }
+</script>
+</body>
+</html>
