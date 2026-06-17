@@ -7,6 +7,8 @@ import { useTheme } from './ThemeProvider'
 
 // Show progress on individual post/piece pages, not listing pages
 function isReadingPage(pathname: string) {
+  if (/^\/blog\/tags\//.test(pathname)) return false
+  if (/^\/creative\/[^/]+\/collection\//.test(pathname)) return false
   return (
     /^\/blog\/.+/.test(pathname) ||
     /^\/creative\/[^/]+\/.+/.test(pathname)

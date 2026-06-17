@@ -2,40 +2,43 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import type { PostMetadata } from '@/lib/posts'
-
-type Work = PostMetadata & { slug: string }
+import {
+  collectionHref,
+  sortCollectionWorks,
+  type CreativeType,
+  type PostWithSlug,
+} from '@/lib/content-utils'
 
 type TabData = {
-  type: string
-  works: Work[]
+  type: CreativeType
+  works: PostWithSlug[]
 }
 
-const typeLabels: Record<string, string> = {
+const typeLabels: Record<CreativeType, string> = {
   poem: 'Poems',
   prose: 'Prose',
   worldbuilding: 'Worldbuilding',
   language: 'Languages',
 }
 
-// Group works by their collection field.
-// Works without a collection go into a null bucket (rendered last).
-function groupByCollection(works: Work[]): Map<string | null, Work[]> {
-  const map = new Map<string | null, Work[]>()
+function groupByCollection(works: PostWithSlug[]): Map<string | null, PostWithSlug[]> {
+  const map = new Map<string | null, PostWithSlug[]>()
   for (const work of works) {
     const key = work.collection ?? null
     if (!map.has(key)) map.set(key, [])
     map.get(key)!.push(work)
   }
+  for (const [key, items] of map) {
+    map.set(key, sortCollectionWorks(items))
+  }
   return map
 }
 
-// Only group if at least one work has a collection
-function hasCollections(works: Work[]) {
+function hasCollections(works: PostWithSlug[]) {
   return works.some((w) => !!w.collection)
 }
 
-function WorkRow({ work }: { work: Work }) {
+function WorkRow({ work }: { work: PostWithSlug }) {
   return (
     <Link
       href={`/creative/${work.type}/${work.slug}`}
@@ -73,13 +76,12 @@ function WorkRow({ work }: { work: Work }) {
   )
 }
 
-function GroupedWorks({ works }: { works: Work[] }) {
+function GroupedWorks({ works }: { works: PostWithSlug[] }) {
   const grouped = groupByCollection(works)
 
-  // Render named collections first, then uncollected
   const named = Array.from(grouped.entries()).filter(([k]) => k !== null) as [
     string,
-    Work[],
+    PostWithSlug[],
   ][]
   const uncollected = grouped.get(null) ?? []
 
@@ -87,15 +89,16 @@ function GroupedWorks({ works }: { works: Work[] }) {
     <div>
       {named.map(([collection, items]) => (
         <div key={collection} className="mb-10">
-          <h2
-            className="text-xs font-semibold uppercase tracking-widest mb-1"
+          <Link
+            href={collectionHref(items[0].type as CreativeType, collection)}
+            className="text-xs font-semibold uppercase tracking-widest mb-1 block hover:underline"
             style={{
               color: 'var(--text-faint)',
               fontFamily: 'var(--font-ui)',
             }}
           >
             {collection}
-          </h2>
+          </Link>
           <div>
             {items.map((w) => (
               <WorkRow key={w.slug} work={w} />
@@ -128,7 +131,7 @@ function GroupedWorks({ works }: { works: Work[] }) {
   )
 }
 
-function FlatWorks({ works }: { works: Work[] }) {
+function FlatWorks({ works }: { works: PostWithSlug[] }) {
   return (
     <div>
       {works.map((w) => (
@@ -144,7 +147,6 @@ export default function CreativeTabs({ tabs }: { tabs: TabData[] }) {
 
   return (
     <div>
-      {/* Tab row */}
       <div
         className="flex gap-0 border-b overflow-x-auto mb-8"
         style={{ borderColor: 'var(--border)' }}
@@ -173,7 +175,6 @@ export default function CreativeTabs({ tabs }: { tabs: TabData[] }) {
         ))}
       </div>
 
-      {/* Works */}
       {activeWorks.length === 0 ? (
         <p className="py-12 text-center text-sm" style={{ color: 'var(--text-muted)' }}>
           Nothing here yet.

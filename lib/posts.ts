@@ -1,22 +1,47 @@
 import fs from 'fs'
 import path from 'path'
+import {
+  CREATIVE_TYPES,
+  isCollectionOrdered,
+  sortCollectionWorks,
+  type CreativeType,
+  type PostWithSlug,
+} from '@/lib/content-utils'
+
+export type { CreativeType, PostWithSlug }
+export {
+  CREATIVE_TYPES,
+  collectionHref,
+  collectionToSegment,
+  isCollectionOrdered,
+  segmentToCollection,
+  segmentToTag,
+  sortCollectionWorks,
+  tagHref,
+  tagToSegment,
+} from '@/lib/content-utils'
 
 const BLOG_PATH = path.join(process.cwd(), 'content/blog')
 const CREATIVE_BASE_PATH = path.join(process.cwd(), 'content/creative')
 
-const CREATIVE_TYPES = ['poem', 'prose', 'worldbuilding', 'language'] as const
+export const CREATIVE_TYPE_LABELS: Record<CreativeType, string> = {
+  poem: 'Poems',
+  prose: 'Prose',
+  worldbuilding: 'Worldbuilding',
+  language: 'Languages',
+}
 
-export type CreativeType = (typeof CREATIVE_TYPES)[number]
+export const CREATIVE_TYPE_SINGULAR: Record<CreativeType, string> = {
+  poem: 'Poem',
+  prose: 'Prose',
+  worldbuilding: 'Worldbuilding',
+  language: 'Language',
+}
 
-export { CREATIVE_TYPES }
+export type PostMetadata = Omit<PostWithSlug, 'slug'>
 
-export type PostMetadata = {
-  title: string
-  date: string
-  description: string
-  type: 'blog' | CreativeType
-  collection?: string
-  coverImage?: string
+export function isCreativeType(value: string): value is CreativeType {
+  return (CREATIVE_TYPES as readonly string[]).includes(value)
 }
 
 // Blog posts
@@ -37,6 +62,18 @@ export async function getBlogMetadata(slug: string) {
 export async function getAllBlogPosts() {
   const posts = await Promise.all(getBlogSlugs().map(getBlogMetadata))
   return posts.sort((a, b) => (a.date < b.date ? 1 : -1))
+}
+
+export async function getAllBlogTags(): Promise<string[]> {
+  const posts = await getAllBlogPosts()
+  const tags = new Set<string>()
+  posts.forEach((post) => post.tags?.forEach((tag) => tags.add(tag)))
+  return Array.from(tags).sort()
+}
+
+export async function getBlogPostsByTag(tag: string) {
+  const posts = await getAllBlogPosts()
+  return posts.filter((post) => post.tags?.includes(tag))
 }
 
 // Creative works - type-based
@@ -63,7 +100,7 @@ export async function getAllCreativeWorksByType(type: CreativeType) {
 }
 
 export async function getAllCreativeWorks() {
-  const allWorks: (PostMetadata & { slug: string })[] = []
+  const allWorks: PostWithSlug[] = []
   for (const type of CREATIVE_TYPES) {
     const works = await getAllCreativeWorksByType(type)
     allWorks.push(...works)
@@ -77,10 +114,9 @@ export async function getCreativeWorkTypes() {
   return Array.from(types)
 }
 
-// Get available creative types (for grouping by collection)
 export async function getCreativeWorksByTypeAndCollection(type: CreativeType) {
   const works = await getAllCreativeWorksByType(type)
-  const collections = new Map<string, typeof works>()
+  const collections = new Map<string, PostWithSlug[]>()
   works.forEach((work) => {
     const collectionName = work.collection || 'Uncategorized'
     if (!collections.has(collectionName)) {
@@ -88,7 +124,61 @@ export async function getCreativeWorksByTypeAndCollection(type: CreativeType) {
     }
     collections.get(collectionName)!.push(work)
   })
+  for (const [name, items] of collections) {
+    collections.set(name, sortCollectionWorks(items))
+  }
   return collections
+}
+
+export async function getAllCollectionsForType(
+  type: CreativeType
+): Promise<string[]> {
+  const works = await getAllCreativeWorksByType(type)
+  const collections = new Set<string>()
+  works.forEach((work) => {
+    if (work.collection) collections.add(work.collection)
+  })
+  return Array.from(collections)
+}
+
+export async function getCreativeWorksInCollection(
+  type: CreativeType,
+  collection: string
+) {
+  const works = await getAllCreativeWorksByType(type)
+  return sortCollectionWorks(works.filter((w) => w.collection === collection))
+}
+
+export async function getCollectionNeighbors(
+  type: CreativeType,
+  slug: string
+): Promise<{
+  prev: PostWithSlug | null
+  next: PostWithSlug | null
+  ordered: boolean
+}> {
+  const work = await getCreativeMetadata(type, slug)
+  if (!work.collection) {
+    return { prev: null, next: null, ordered: false }
+  }
+
+  const collectionWorks = await getCreativeWorksInCollection(
+    type,
+    work.collection
+  )
+  if (!isCollectionOrdered(collectionWorks)) {
+    return { prev: null, next: null, ordered: false }
+  }
+
+  const index = collectionWorks.findIndex((w) => w.slug === slug)
+  return {
+    prev: index > 0 ? collectionWorks[index - 1] : null,
+    next:
+      index >= 0 && index < collectionWorks.length - 1
+        ? collectionWorks[index + 1]
+        : null,
+    ordered: true,
+  }
 }
 
 // Legacy support - returns blog posts

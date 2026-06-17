@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import BlogTags from '@/app/components/BlogTags'
 import { getAllBlogPosts, getAllCreativeWorks } from '@/lib/posts'
 
 export default async function Home() {
@@ -90,6 +91,9 @@ export default async function Home() {
                 >
                   {post.title}
                 </h3>
+                {post.tags && post.tags.length > 0 && (
+                  <BlogTags tags={post.tags} className="mt-1.5" />
+                )}
               </div>
             </Link>
           ))}

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
+import BlogTags from '@/app/components/BlogTags'
 import { getBlogSlugs } from '@/lib/posts'
 
 export function generateStaticParams() {
@@ -59,6 +60,10 @@ export default async function PostPage({
         >
           {metadata.title}
         </h1>
+
+        {metadata.tags && metadata.tags.length > 0 && (
+          <BlogTags tags={metadata.tags} clickable className="mt-4" />
+        )}
 
         {metadata.description && (
           <p
